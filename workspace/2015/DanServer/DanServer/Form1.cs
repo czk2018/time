@@ -44,11 +44,11 @@ namespace DanServer
         Dictionary<string, Socket> dic2 = new Dictionary<string, Socket> { };   //定义一个集合，存储客户端信息
 
         private delegate void FlushClient(String text); //代理
-        private delegate void FlushClient11(string msg, bool bFind); //代理
-        private delegate void FlushClient12(string msg, bool bFind); //代理
-        private delegate void FlushClient13(string msg, bool bFind); //代理
-        private delegate void FlushClient14(string msg, bool bFind); //代理
-        private delegate void FlushClient15(string msg, bool bFind); //代理
+        private delegate void FlushClient11(string msg, bool bFind, string strIp); //代理
+        private delegate void FlushClient12(string msg, bool bFind, string strIp); //代理
+        private delegate void FlushClient13(string msg, bool bFind, string strIp); //代理
+        private delegate void FlushClient14(string msg, bool bFind, string strIp); //代理
+        private delegate void FlushClient15(string msg, bool bFind, string strIp); //代理
         private SqlConnection myConnection;
 
         private int iClear = 0;
@@ -507,12 +507,11 @@ namespace DanServer
                     if (m_exit == true) break;
 
                     //将机器接受到的字节数组转换为人可以读懂的字符串   
-                    String strSRecMsg = Encoding.UTF8.GetString(arrServerRecMsg, 0, length).Trim();
-                    insert(strSRecMsg);
+                    String strSRecMsg = Encoding.GetEncoding("GB18030").GetString(arrServerRecMsg, 0, length).Trim();
 
                     strSRecMsg += "\n\n";
                     strSRecMsg = strSRecMsg.Trim();
-                    MsgType(strSRecMsg);
+                    MsgType(strSRecMsg, local_name);
                     
                     Thread.Sleep(100);
                 }
@@ -526,7 +525,7 @@ namespace DanServer
 
         }
 
-        private void MsgType(string strSRecMsg)
+        private void MsgType(string strSRecMsg, string strIp)
         {
             String[] strMsg = strSRecMsg.Split("\n".ToArray());
             if (strMsg.Length > 0)
@@ -547,7 +546,9 @@ namespace DanServer
                     }
                     list_local.Add(strSRecMsg);
 
-                    ThreadFunctionText11(strMsg[0], bFind); 
+                    //insert(strSRecMsg);
+
+                    ThreadFunctionText11(strMsg[0], bFind, strIp); 
                 }
                 else if (key.Contains(str_contains12) == true)//
                 {
@@ -564,7 +565,7 @@ namespace DanServer
                     }
                     list_local.Add(strSRecMsg);
 
-                    ThreadFunctionText12(strMsg[0], bFind);
+                    ThreadFunctionText12(strMsg[0], bFind, strIp);
                 }
                 else if (key.Contains(str_contains13) == true)//
                 {
@@ -581,7 +582,7 @@ namespace DanServer
                     }
                     list_local.Add(strSRecMsg);
 
-                    ThreadFunctionText13(strMsg[0], bFind);
+                    ThreadFunctionText13(strMsg[0], bFind, strIp);
                 }
                 else if (key.Contains(str_contains14) == true)//
                 {
@@ -598,7 +599,7 @@ namespace DanServer
                     }
                     list_local.Add(strSRecMsg);
 
-                    ThreadFunctionText14(strMsg[0], bFind);
+                    ThreadFunctionText14(strMsg[0], bFind, strIp);
                 }
                 else if (key.Contains(str_contains15) == true)//
                 {
@@ -615,17 +616,17 @@ namespace DanServer
                     }
                     list_local.Add(strSRecMsg);
 
-                    ThreadFunctionText15(strMsg[0], bFind);
+                    ThreadFunctionText15(strMsg[0], bFind, strIp);
                 }
             }
         }
 
-        private void ThreadFunctionText11(string msg, bool bFind)
+        private void ThreadFunctionText11(string msg, bool bFind, string strIp)
         {
             if (this.listBox1.InvokeRequired)//等待异步
             {
                 FlushClient11 fc = new FlushClient11(ThreadFunctionText11);
-                this.Invoke(fc, new object[] { msg, bFind }); //通过代理调用刷新方法
+                this.Invoke(fc, new object[] { msg, bFind, strIp }); //通过代理调用刷新方法
             }
             else
             {
@@ -657,7 +658,6 @@ namespace DanServer
                 richTextBox7.Clear();
                 richTextBox8.Clear();
 
-                double zong = 0.0;
                 for (int i = 0; i < list.Count; i++)
                 {
                     //解析第一行为用户信息
@@ -666,7 +666,7 @@ namespace DanServer
                     String text = list.ElementAt(i);
                     text = text.Trim();
                     String[] strMsg = text.Split("\n".ToArray());
-                    if (strMsg.Length == 8)
+                    /*if (strMsg.Length == 9)
                     {
                         index = 0;
                         textBox3.Text = "";
@@ -674,7 +674,7 @@ namespace DanServer
                     else
                     {
                         textBox3.Text = strMsg[0];
-                    }
+                    }*/
 
                     String[] strMsg2 = strMsg[index++].Split(":".ToArray())[1].Split(",".ToArray());
                     double pinglv1 = 0;
@@ -772,14 +772,30 @@ namespace DanServer
                         richTextBox8.AppendText("频率：无\t\t温度：无\n");
                     }
 
-                    //添加位置信息
-                    label13.Text = strMsg[index++].Split(":".ToArray())[1];
+                    if (strMsg.Length != 9)
+                    { 
+                        //添加位置信息
+                        label13.Text = strMsg[index++].Split(":".ToArray())[1];
 
-                    zong = (pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8) / 8;
-                    zong = -0.748057 * (zong - 6582);
+                        double zong = 0.0;
+                        zong = (pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8 + pinglv8) / 8;
+                        zong = -0.748057 * (zong - 6582);
+
+                        string strType = strMsg[index++].Split(":".ToArray())[1];
+                        if (i == list.Count - 1)
+                        {
+                            insert_msg(strType, text, strIp, zong.ToString());
+                        }
+                        label15.Text = zong.ToString();
+                    }
+                    else
+                    {
+                        if (i == list.Count - 1)
+                        {
+                            insert_msg("", text, strIp, "");
+                        }
+                    }
                 }
-
-                label15.Text = zong.ToString();
 
                 scrollBottom(richTextBox1);
                 scrollBottom(richTextBox2);
@@ -792,12 +808,29 @@ namespace DanServer
             }
         }
 
-        private void ThreadFunctionText12(string msg, bool bFind)
+        private void insert_msg(string msgType, string msgContent, string strIp, string msgValue)
+        {
+            String sql = "insert into jiance(msg_type,msg_content,ip_addr)" +
+                " values('" + msgType + "', '"
+                + msgContent + "', '"
+                + strIp + "')";
+            SqlCommand sqlCmd = new SqlCommand(sql, myConnection);
+            sqlCmd.ExecuteNonQuery();
+            
+            String sql2 = "insert into fenxi(msg_type,msg_value,ip_addr)" +
+                " values('" + msgType + "', '"
+                + msgValue + "', '"
+                + strIp + "')";
+            SqlCommand sqlCmd2 = new SqlCommand(sql2, myConnection);
+            sqlCmd2.ExecuteNonQuery();
+        }
+
+        private void ThreadFunctionText12(string msg, bool bFind, string strIp)
         {
             if (this.listBox2.InvokeRequired)//等待异步
             {
                 FlushClient12 fc = new FlushClient12(ThreadFunctionText12);
-                this.Invoke(fc, new object[] { msg, bFind }); //通过代理调用刷新方法
+                this.Invoke(fc, new object[] { msg, bFind, strIp }); //通过代理调用刷新方法
             }
             else
             {
@@ -837,7 +870,12 @@ namespace DanServer
 
                     //添加位置信息
                     label20.Text = strMsg[index++].Split(":".ToArray())[1];
-                    
+
+                    string strType = strMsg[index++].Split(":".ToArray())[1];
+                    if (i == list.Count - 1)
+                    {
+                        insert_msg(strType, text, strIp, strMsg2.ToString());
+                    }
                 }
                 
                 scrollBottom(richTextBox9);
@@ -845,12 +883,12 @@ namespace DanServer
             }
         }
 
-        private void ThreadFunctionText13(string msg, bool bFind)
+        private void ThreadFunctionText13(string msg, bool bFind, string strIp)
         {
             if (this.listBox2.InvokeRequired)//等待异步
             {
                 FlushClient13 fc = new FlushClient13(ThreadFunctionText13);
-                this.Invoke(fc, new object[] { msg, bFind }); //通过代理调用刷新方法
+                this.Invoke(fc, new object[] { msg, bFind, strIp }); //通过代理调用刷新方法
             }
             else
             {
@@ -890,18 +928,23 @@ namespace DanServer
                     //添加位置信息
                     label21.Text = strMsg[index++].Split(":".ToArray())[1];
 
+                    string strType = strMsg[index++].Split(":".ToArray())[1];
+                    if (i == list.Count - 1)
+                    {
+                        insert_msg(strType, text, strIp, strMsg2.ToString());
+                    }
                 }
 
                 scrollBottom(richTextBox12);
             }
         }
 
-        private void ThreadFunctionText14(string msg, bool bFind)
+        private void ThreadFunctionText14(string msg, bool bFind, string strIp)
         {
             if (this.listBox4.InvokeRequired)//等待异步
             {
                 FlushClient14 fc = new FlushClient14(ThreadFunctionText14);
-                this.Invoke(fc, new object[] { msg, bFind }); //通过代理调用刷新方法
+                this.Invoke(fc, new object[] { msg, bFind, strIp }); //通过代理调用刷新方法
             }
             else
             {
@@ -950,6 +993,11 @@ namespace DanServer
                     //添加位置信息
                     label22.Text = strMsg[index++].Split(":".ToArray())[1];
 
+                    string strType = strMsg[index++].Split(":".ToArray())[1];
+                    if (i == list.Count - 1)
+                    {
+                        insert_msg(strType, text, strIp, str_a.ToString());
+                    }
                 }
 
                 scrollBottom(richTextBox13);
@@ -957,12 +1005,12 @@ namespace DanServer
             }
         }
 
-        private void ThreadFunctionText15(string msg, bool bFind)
+        private void ThreadFunctionText15(string msg, bool bFind, string strIp)
         {
             if (this.listBox5.InvokeRequired)//等待异步
             {
                 FlushClient15 fc = new FlushClient15(ThreadFunctionText15);
-                this.Invoke(fc, new object[] { msg, bFind }); //通过代理调用刷新方法
+                this.Invoke(fc, new object[] { msg, bFind, strIp }); //通过代理调用刷新方法
             }
             else
             {
@@ -1010,6 +1058,11 @@ namespace DanServer
                     //添加位置信息
                     label30.Text = strMsg[index++].Split(":".ToArray())[1];
 
+                    string strType = strMsg[index++].Split(":".ToArray())[1];
+                    if (i == list.Count - 1)
+                    {
+                        insert_msg(strType, text, strIp, e_str.ToString());
+                    }
                 }
 
                 scrollBottom(richTextBox15);
