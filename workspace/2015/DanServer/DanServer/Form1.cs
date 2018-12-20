@@ -784,7 +784,21 @@ namespace DanServer
                         string strType = strMsg[index++].Split(":".ToArray())[1];
                         if (i == list.Count - 1)
                         {
-                            insert_msg(strType, text, strIp, zong.ToString());
+                            //当振弦锚索计计算值大于2500kN，设为三级预警，当数据大于3000kN,设为二级预警，当大于3500kN设为一级预警。数据分析表里写入告警信息，监测信息表和分析表分开。
+                            string str_zong = "三级预警";
+                            if (zong > 3500)
+                            {
+                                str_zong = "一级预警";
+                            }
+                            else if (zong > 3000)
+                            {
+                                str_zong = "二级预警";
+                            }
+                            else if (zong > 2500)
+                            {
+                                str_zong = "三级预警";
+                            }
+                            insert_msg(strType, text, strIp, str_zong.ToString());
                         }
                         label15.Text = zong.ToString();
                     }
@@ -867,14 +881,38 @@ namespace DanServer
 
                     String strMsg2 = strMsg[index++].Split(":".ToArray())[1];
                     richTextBox9.AppendText("位移：" + strMsg2 + "mm\n");
-
+                    
                     //添加位置信息
                     label20.Text = strMsg[index++].Split(":".ToArray())[1];
 
                     string strType = strMsg[index++].Split(":".ToArray())[1];
                     if (i == list.Count - 1)
                     {
-                        insert_msg(strType, text, strIp, strMsg2.ToString());
+                        /*H（位移量）=H1（两小时后的值）-H0（两小时前的值）,位移计每十分钟发一回，计算每两小时的位移量，用两小时后的值的减去两小时前面的值即可。
+                         * 当位移量两小时变化量超过0.03mm设置为三级预警，
+                         * 当位移变化量超过0.05mm时设为二级预警，
+                         * 当位移变化量超过0.08mm时设为一级预警
+                         * */
+                        double d1 = 0.0, d2 = 0.0;
+                        double.TryParse(list.ElementAt(1).Split(":".ToArray())[1], out d1);
+                        double.TryParse(list.ElementAt(list.Count - 1).Split(":".ToArray())[1], out d2);
+
+                        double dd = d2 - d1;
+
+                        string str_zong = "三级预警";
+                        if (dd > 0.08)
+                        {
+                            str_zong = "一级预警";
+                        }
+                        else if (dd > 0.05)
+                        {
+                            str_zong = "二级预警";
+                        }
+                        else if (dd > 0.03)
+                        {
+                            str_zong = "三级预警";
+                        }
+                        insert_msg(strType, text, strIp, str_zong.ToString());
                     }
                 }
                 
@@ -931,7 +969,25 @@ namespace DanServer
                     string strType = strMsg[index++].Split(":".ToArray())[1];
                     if (i == list.Count - 1)
                     {
-                        insert_msg(strType, text, strIp, strMsg2.ToString());
+                        /*当风速大于15m/s时设为三级预警，当风速大于20m/s时设为二极预警，当风速大于25m/s时，设为一级预警
+                         * */
+                        double dd = 0.0;
+                        double.TryParse(strMsg2, out dd);
+                        
+                        string str_zong = "三级预警";
+                        if (dd > 25)
+                        {
+                            str_zong = "一级预警";
+                        }
+                        else if (dd > 20)
+                        {
+                            str_zong = "二级预警";
+                        }
+                        else if (dd > 15)
+                        {
+                            str_zong = "三级预警";
+                        }
+                        insert_msg(strType, text, strIp, str_zong.ToString());
                     }
                 }
 
@@ -996,7 +1052,22 @@ namespace DanServer
                     string strType = strMsg[index++].Split(":".ToArray())[1];
                     if (i == list.Count - 1)
                     {
-                        insert_msg(strType, text, strIp, str_a.ToString());
+                        /*当振动加速度大于5m/s2,设为三级预警，当振动加速度大于10m/s2时设为二级预警，当振动加速度大于15m/s2,设为一级预警
+                         * */
+                        string str_zong = "三级预警";
+                        if (a > 15)
+                        {
+                            str_zong = "一级预警";
+                        }
+                        else if (a > 10)
+                        {
+                            str_zong = "二级预警";
+                        }
+                        else if (a > 5)
+                        {
+                            str_zong = "三级预警";
+                        }
+                        insert_msg(strType, text, strIp, str_zong.ToString());
                     }
                 }
 
@@ -1061,7 +1132,22 @@ namespace DanServer
                     string strType = strMsg[index++].Split(":".ToArray())[1];
                     if (i == list.Count - 1)
                     {
-                        insert_msg(strType, text, strIp, e_str.ToString());
+                        /*对分析的数据进行阈值判定，当振弦应变数据大于500,设为三级预警，当数据大于800，设为二极预警，当应变数据大于1000，设为一级预警。
+                         * */
+                        string str_zong = "三级预警";
+                        if (e > 1000)
+                        {
+                            str_zong = "一级预警";
+                        }
+                        else if (e > 800)
+                        {
+                            str_zong = "二级预警";
+                        }
+                        else if (e > 500)
+                        {
+                            str_zong = "三级预警";
+                        }
+                        insert_msg(strType, text, strIp, str_zong.ToString());
                     }
                 }
 
