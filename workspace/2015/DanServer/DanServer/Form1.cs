@@ -1135,15 +1135,15 @@ namespace DanServer
                         /*对分析的数据进行阈值判定，当振弦应变数据大于500,设为三级预警，当数据大于800，设为二极预警，当应变数据大于1000，设为一级预警。
                          * */
                         string str_zong = "三级预警";
-                        if (e > 1000)
+                        if (Math.Abs(e) > 1000)
                         {
                             str_zong = "一级预警";
                         }
-                        else if (e > 800)
+                        else if (Math.Abs(e) > 800)
                         {
                             str_zong = "二级预警";
                         }
-                        else if (e > 500)
+                        else if (Math.Abs(e) > 500)
                         {
                             str_zong = "三级预警";
                         }
